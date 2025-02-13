@@ -46,8 +46,8 @@ function gerarRelatoriosPDF() {
 
     var html = '<html><head><style>';
     html += 'table { border-collapse: collapse; }';
-    html += 'th, td { padding: 3px; background-color: #e1e1e1; }';
-    html += 'body { font-family: Arial, sans-serif; background-image: url("https://static.wixstatic.com/media/1b4275_f54003034cef4f02b7df30965803e46a~mv2_d_2000_2000_s_2.jpg"); background-repeat: no-repeat; background-position: top right; background-size: 200px 200px; }';
+    html += 'th, td { padding: 3px; background-color: #e1e1e1; }'; // não ficou na cor de fundo no pdf
+    html += 'body { font-family: Arial, sans-serif; background-image: url("não funcinou"); background-repeat: no-repeat; background-position: top right; background-size: 200px 200px; }'; //problema para buscar a imagem ou algo ainda para investigar
     html += '</style></head><body>';
     html += '<h2 align="center">Relatório de ' + prof + '</h2>';
     html += '<h3>Resumo por Plano</h3>';
