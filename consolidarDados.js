@@ -1,3 +1,4 @@
+//Consolidação dos Dados
 function consolidarDados() {
   // Abre a planilha ativa
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
