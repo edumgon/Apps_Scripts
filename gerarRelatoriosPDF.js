@@ -39,6 +39,7 @@ function gerarRelatoriosPDF() {
       var plano = d[1];
       //var valor = parseFloat(d[4].toString().replace('R$', '').replace('.', '').replace(',', '.'));
       var valor = d[4];
+      if (isNaN(valor) || valor === '') return; 
       totalGeral += valor;
       if (!planos[plano]) planos[plano] = 0;
       planos[plano] += valor;
@@ -49,8 +50,8 @@ function gerarRelatoriosPDF() {
 
     var html = '<html><head><style>';
     html += 'table { border-collapse: collapse; }';
-    html += 'th, td { padding: 3px; background-color: #e1e1e1; }';
-    html += 'body { font-family: Arial, sans-serif; background-image: url("' + imageUrl + '"); background-repeat: no-repeat; background-position: top right; background-size: 200px 200px; }';
+    html += 'th, td { padding: 3px; background-color: #e1e1e1; font-size:12px; }';
+    html += 'body { font-family: Arial, sans-serif; }';
     html += '</style></head><body>';
     html += '<h2 align="center">Relatório de ' + prof + '</h2>';
     html += '<h3>Resumo por Plano</h3>';
@@ -61,8 +62,8 @@ function gerarRelatoriosPDF() {
     html += '<tr><td><strong>Total</strong></td><td align="right"><strong>' + totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) + '</strong></td></tr>';
     html += '</table>';
 
-    html += '<h3>Detalhamento</h3>';
-    html += '<table border="1"><tr><th>Plano</th><th>Paciente</th><th>Datas Aten.</th><th>Valor Líquido</th><th>Valor Glosa</th><th>Motivo Glosa</th></tr>';
+    html += '<br><br><h3>Detalhamento</h3>';
+    html += '<table border="1" width="100%"><tr><th>Plano</th><th>Paciente</th><th>Datas Aten.</th><th>Valor Líquido</th><th>Valor Glosa</th><th>Motivo Glosa</th></tr>';
     dados.forEach(function(d) {
       html += '<tr>';
       html += '<td>' + d[1] + '</td>';
@@ -74,8 +75,8 @@ function gerarRelatoriosPDF() {
       html += '</tr>';
     });
     html += '</table>';
+    html += '<img src="' + imageUrl + '" style="position: absolute; top: 50; right: 0; z-index: -1; opacity: 0.5;" />';
     html += '<p align="right" style="font-size: 10px;">Emitio em ' + formattedDate + '</p>';
-    html += '<img src="' + imageUrl + '" style="position: absolute; top: 0; right: 0; z-index: -1;" />';
     html += '</body></html>';
 
     //Para pegar as 5 primeiras letras da planilha
