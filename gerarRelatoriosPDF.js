@@ -44,10 +44,13 @@ function gerarRelatoriosPDF() {
       planos[plano] += valor;
     });
 
+    //Carrega a imagem e base64 para funcionar
+    var imageUrl = getImageBase64('logoup.jpg');
+
     var html = '<html><head><style>';
     html += 'table { border-collapse: collapse; }';
-    html += 'th, td { padding: 3px; background-color: #e1e1e1; }'; // não ficou na cor de fundo no pdf
-    html += 'body { font-family: Arial, sans-serif; background-image: url("não funcinou"); background-repeat: no-repeat; background-position: top right; background-size: 200px 200px; }'; //problema para buscar a imagem ou algo ainda para investigar
+    html += 'th, td { padding: 3px; background-color: #e1e1e1; }';
+    html += 'body { font-family: Arial, sans-serif; background-image: url("' + imageUrl + '"); background-repeat: no-repeat; background-position: top right; background-size: 200px 200px; }';
     html += '</style></head><body>';
     html += '<h2 align="center">Relatório de ' + prof + '</h2>';
     html += '<h3>Resumo por Plano</h3>';
@@ -72,6 +75,7 @@ function gerarRelatoriosPDF() {
     });
     html += '</table>';
     html += '<p align="right" style="font-size: 10px;">Emitio em ' + formattedDate + '</p>';
+    html += '<img src="' + imageUrl + '" style="position: absolute; top: 0; right: 0; z-index: -1;" />';
     html += '</body></html>';
 
     //Para pegar as 5 primeiras letras da planilha
@@ -79,6 +83,8 @@ function gerarRelatoriosPDF() {
     var prefix = sheetName.substring(0, 5);
 
     var blob = HtmlService.createHtmlOutput(html).getAs('application/pdf').setName('Relatorio_' + prof + '_' + prefix +'.pdf');
+    //Antigo
+    //var blob = HtmlService.createHtmlOutput(html).getAs('application/pdf').setName('Relatorio_' + prof + '.pdf');
     folder.createFile(blob);
 
     //Gera em html
@@ -94,4 +100,17 @@ function getCurrentFolder() {
   var file = DriveApp.getFileById(SpreadsheetApp.getActiveSpreadsheet().getId());
   var folder = file.getParents().next();
   return folder;
+}
+
+function getImageBase64(fileName) {
+  var folder = getCurrentFolder(); // Função que retorna a pasta atual
+  var files = folder.getFilesByName(fileName);
+  if (files.hasNext()) {
+    var file = files.next();
+    var blob = file.getBlob();
+    var base64 = Utilities.base64Encode(blob.getBytes());
+    var contentType = blob.getContentType();
+    return 'data:' + contentType + ';base64,' + base64;
+  }
+  return null;
 }
