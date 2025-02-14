@@ -68,7 +68,13 @@ function gerarRelatoriosPDF() {
       html += '<tr>';
       html += '<td>' + d[1] + '</td>';
       html += '<td>' + d[2] + '</td>';
-      html += '<td>' + d[3] + '</td>';
+      if (d[3] instanceof Date) {
+        var formattedDate = Utilities.formatDate(d[3], Session.getScriptTimeZone(), 'dd/MM/yyyy'); // Formato desejado
+        html += '<td>' + formattedDate + '</td>';
+      } else {
+        html += '<td>' + d[3] + '</td>';
+      }
+      //html += '<td>' +  Utilities.formatString("%s", d[3]) + '</td>';
       html += '<td align="right">' + d[4].toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) + '</td>';
       html += '<td align="right">' + d[5].toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) + '</td>';
       html += '<td>' + d[6] + '</td>';
