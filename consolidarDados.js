@@ -3,32 +3,35 @@ function consolidarDados() {
   // Abre a planilha ativa
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   
-  // Exibe uma caixa de diálogo para confirmar a limpeza dos dados
-  const ui = SpreadsheetApp.getUi();
-  const resposta = ui.alert(
-    "Atenção!",
-    "Os dados da aba ConsPsico serão limpos. Deseja continuar?",
-    ui.ButtonSet.YES_NO
-  );
-
-  // Verifica a resposta do usuário
-  if (resposta !== ui.Button.YES) {
-    ui.alert("Operação cancelada pelo usuário.");
-    return; // Interrompe a execução do script
-  }
-
   // Obtém todas as abas da planilha
   const sheets = spreadsheet.getSheets();
   
   // Define as abas que devem ser ignoradas
   const abasIgnoradas = ["ConsPsico", "Capa", "Lotes", "NÃO FATURADAS", "Apoio"];
   
-  // Obtém a aba de destino (ConsPsico)
+  // Valida se aba ConsPsico existe
+  if (!spreadsheet.getSheetByName("ConsPsico")) {
+    // Cria aba ConsPsico
+    spreadsheet.insertSheet("ConsPsico");
+  } else {
+    // Exibe uma caixa de diálogo para confirmar a limpeza dos dados
+    const ui = SpreadsheetApp.getUi();
+    const resposta = ui.alert(
+      "Atenção!",
+      "Os dados da aba ConsPsico serão limpos. Deseja continuar?",
+      ui.ButtonSet.YES_NO
+    );
+    // Verifica a resposta do usuário
+    if (resposta !== ui.Button.YES) {
+      ui.alert("Operação cancelada pelo usuário.");
+      return; // Interrompe a execução do script
+    }
+    // Limpa os dados anteriores na aba ConsPsico (exceto o cabeçalho)
+    spreadsheet.getSheetByName("ConsPsico").getRange("A5:Z").clearContent();
+  }
+
   const abaConsPsico = spreadsheet.getSheetByName("ConsPsico");
-  
-  // Limpa os dados anteriores na aba ConsPsico (exceto o cabeçalho)
-  abaConsPsico.getRange("A5:Z").clearContent();
-  
+
   // Define o cabeçalho na aba ConsPsico (com a nova coluna "PLANO")
   const cabecalho = ["PROFISSIONAL", "PLANO", "PACIENTE", "DATAS ATEN.","VALOR LÍQUIDO", "VALOR GLOSA", "MOTIVO GLOSA"];
   abaConsPsico.getRange(4, 1, 1, cabecalho.length).setValues([cabecalho]);
@@ -75,6 +78,7 @@ function consolidarDados() {
     abaConsPsico.getRange(5, 1, dadosConsolidados.length, dadosConsolidados[0].length).setValues(dadosConsolidados);
   }
   
-  // Exibe uma mensagem de conclusão
+  // Exibe uma mensagem de conclusão ao usuário
+  const ui = SpreadsheetApp.getUi();
   ui.alert("Consolidação concluída com sucesso!");
 }
