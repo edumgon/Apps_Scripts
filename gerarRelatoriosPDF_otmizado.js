@@ -33,17 +33,22 @@ function gerarRelatoriosPDF() {
       planosMap.set(plano, (planosMap.get(plano) || 0) + valor);
     }
   });
+  // Open pop to get name of the file
+  const fileName = Browser.inputBox('Digite o nome do arquivo', 'Relatorio', Browser.Buttons.OK_CANCEL);
+  // Get the name of the file
+  const name = fileName === 'cancel' ? 'Relatorio' : fileName;
 
   // Create folder with formatted date
   const now = new Date();
   const formattedDate = Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyy-MM-dd_HH:mm");
   const currentFolder = getCurrentFolder();
-  const folder = currentFolder.createFolder('Relatorios_Profissionais_' + formattedDate);
+  const folder = currentFolder.createFolder('Rel_'+ name + '_' + formattedDate);
 
   // Get image once instead of in the loop
   const imageUrl = getImageBase64('logoup.jpg');
-  const sheetName = ss.getName();
-  const prefix = sheetName.substring(0, 5);
+    
+  /*const sheetName = ss.getName();
+  const prefix = sheetName.substring(0, 5);*/
 
   // Prepare HTML style once
   const styleHTML = `
@@ -115,7 +120,7 @@ function gerarRelatoriosPDF() {
 
     const blob = HtmlService.createHtmlOutput(html)
       .getAs('application/pdf')
-      .setName(`Relatorio_${prof}_${prefix}.pdf`);
+      .setName(`Relatorio_${prof}_${name}.pdf`);
     
     folder.createFile(blob);
   });
@@ -124,7 +129,7 @@ function gerarRelatoriosPDF() {
   const endTime = new Date();
   const timeDiff = (endTime - startTime) / 1000;
 
-  SpreadsheetApp.getUi().alert('Relatórios gerados na pasta: ' + folder.getUrl());
+  //SpreadsheetApp.getUi().alert('Relatórios gerados na pasta: ' + folder.getUrl());
   SpreadsheetApp.getUi().alert("Function executed in: " + timeDiff + " seconds");
 }
 
