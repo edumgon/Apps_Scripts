@@ -29,8 +29,10 @@ function gerarRelatoriosPDF() {
 
     // Update plano totals
     if (!isNaN(valor) && valor !== '') {
+      const valorGlosaNumber = isNaN(valorGlosa) ? 0 : valorGlosa;
+      const valorLiquido = valor - valorGlosaNumber;
       const planosMap = planosTotals.get(profissional);
-      planosMap.set(plano, (planosMap.get(plano) || 0) + valor);
+      planosMap.set(plano, (planosMap.get(plano) || 0) + valorLiquido);
     }
   });
   // Open pop to get name of the file
