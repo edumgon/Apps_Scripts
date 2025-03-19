@@ -1,7 +1,8 @@
+// Google Apps Script para gerar relatórios em PDF por profissional
 function gerarRelatoriosPDF() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getActiveSheet();
-  
+
   // Record start time
   const startTime = new Date();
 
@@ -16,8 +17,8 @@ function gerarRelatoriosPDF() {
 
   // Single pass through the data
   rows.forEach(row => {
-    const [profissional, plano, paciente, data, valor, valorGlosa, motivoGlosa] = row;
-    
+    const [profissional, plano, paciente, data, valorBruto, valorGlosa, motivoGlosa] = row;
+
     // Initialize arrays and maps if they don't exist
     if (!profissionaisMap.has(profissional)) {
       profissionaisMap.set(profissional, []);
@@ -28,13 +29,23 @@ function gerarRelatoriosPDF() {
     profissionaisMap.get(profissional).push(row);
 
     // Update plano totals
-    if (!isNaN(valor) && valor !== '') {
-      const valorGlosaNumber = isNaN(valorGlosa) ? 0 : valorGlosa;
-      const valorLiquido = valor - valorGlosaNumber;
+    if (!isNaN(valorBruto) && valorBruto !== '') {
+      const valorBrutoNumber = parseFloat(valorBruto);
+      const valorGlosaNumber = parseFloat(valorGlosa) || 0; // Converte para número ou usa 0 se não for válido
+      const valorLiquido = valorBrutoNumber - valorGlosaNumber;
       const planosMap = planosTotals.get(profissional);
-      planosMap.set(plano, (planosMap.get(plano) || 0) + valorLiquido);
+
+      if (!planosMap.has(plano)) {
+        planosMap.set(plano, { bruto: 0, glosa: 0, liquido: 0 }); // Inicializa com 0
+      }
+
+      const planoTotals = planosMap.get(plano);
+      planoTotals.bruto += valorBrutoNumber;
+      planoTotals.glosa += valorGlosaNumber;
+      planoTotals.liquido += valorLiquido;
     }
   });
+
   // Open pop to get name of the file
   const fileName = Browser.inputBox('Digite o nome do arquivo', 'Relatorio', Browser.Buttons.OK_CANCEL);
   // Get the name of the file
@@ -44,13 +55,10 @@ function gerarRelatoriosPDF() {
   const now = new Date();
   const formattedDate = Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyy-MM-dd_HH:mm");
   const currentFolder = getCurrentFolder();
-  const folder = currentFolder.createFolder('Rel_'+ name + '_' + formattedDate);
+  const folder = currentFolder.createFolder('Rel_' + name + '_' + formattedDate);
 
   // Get image once instead of in the loop
   const imageUrl = getImageBase64('logoup.jpg');
-    
-  /*const sheetName = ss.getName();
-  const prefix = sheetName.substring(0, 5);*/
 
   // Prepare HTML style once
   const styleHTML = `
@@ -64,16 +72,24 @@ function gerarRelatoriosPDF() {
   // Process each profissional
   profissionaisMap.forEach((dados, prof) => {
     const planosMap = planosTotals.get(prof);
-    const totalGeral = Array.from(planosMap.values()).reduce((a, b) => a + b, 0);
+    let totalGeralBruto = 0;
+    let totalGeralGlosa = 0;
+    let totalGeralLiquido = 0;
 
     // Build planos summary table
     const planosHTML = Array.from(planosMap.entries())
-      .map(([plano, valor]) => `
-        <tr>
-          <td>${plano}</td>
-          <td align="right">${valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-        </tr>`
-      ).join('');
+      .map(([plano, valores]) => {
+        totalGeralBruto += valores.bruto;
+        totalGeralGlosa += valores.glosa;
+        totalGeralLiquido += valores.liquido;
+        return `
+          <tr>
+            <td>${plano}</td>
+            <td align="right">${valores.bruto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+            <td align="right">${valores.glosa === 0 ? '' : valores.glosa.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+            <td align="right">${valores.liquido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+          </tr>`;
+      }).join('');
 
     // Build details table
     const detailsHTML = dados.map(d => `
@@ -94,11 +110,13 @@ function gerarRelatoriosPDF() {
           <h2 align="center">Relatório de ${prof}</h2>
           <h3>Resumo por Plano</h3>
           <table border="1">
-            <tr><th>Plano</th><th>Valor Líquido</th></tr>
+            <tr><th>Plano</th><th>Valor Bruto</th><th>Valor Glosa</th><th>Valor Líquido</th></tr>
             ${planosHTML}
             <tr>
               <td><strong>Total</strong></td>
-              <td align="right"><strong>${totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></td>
+              <td align="right"><!--strong>${totalGeralBruto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong--></td>
+              <td align="right"><!--strong>${totalGeralGlosa.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong--></td>
+              <td align="right"><strong>${totalGeralLiquido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></td>
             </tr>
           </table>
           <br><br>
@@ -108,7 +126,7 @@ function gerarRelatoriosPDF() {
               <th>Plano</th>
               <th>Paciente</th>
               <th>Datas Aten.</th>
-              <th>Valor Líquido</th>
+              <th>Valor Bruto</th>
               <th>Valor Glosa</th>
               <th>Motivo Glosa</th>
             </tr>
@@ -123,7 +141,7 @@ function gerarRelatoriosPDF() {
     const blob = HtmlService.createHtmlOutput(html)
       .getAs('application/pdf')
       .setName(`Relatorio_${prof}_${name}.pdf`);
-    
+
     folder.createFile(blob);
   });
 
